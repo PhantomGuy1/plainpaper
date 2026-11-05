@@ -1,6 +1,7 @@
 import './style.css';
-import { ensureStore } from './storage';
+import { ensureStore, loadStore } from './storage';
 import { renderAddPaper } from './add-paper';
+import { renderCard } from './card';
 
 // PlainPaper shell + simple view navigation. Feature views are added spec by
 // spec (see /.kiro/specs — no spec, no feature). Saving a paper returns to
@@ -45,6 +46,26 @@ function renderHome(): void {
   addBtn.addEventListener('click', goToAddPaper);
 
   main.append(h1, tagline, privacy, addBtn);
+
+  // Saved papers render as plain-English cards.
+  const store = loadStore();
+  if (store.papers.length > 0) {
+    const heading = document.createElement('h2');
+    heading.textContent = 'Your papers';
+
+    const list = document.createElement('section');
+    list.className = 'card-list';
+    // Stable display order: entry order (createdAt ascending) for now.
+    // The due-first-dashboard spec will add grouping later.
+    const sorted = [...store.papers].sort((a, b) => a.createdAt - b.createdAt);
+    for (const paper of sorted) {
+      // payday-buckets is not implemented yet, so the slot shows
+      // "Payday not set." and never invents a paycheck.
+      list.appendChild(renderCard(paper));
+    }
+    main.append(heading, list);
+  }
+
   app.appendChild(main);
 }
 
