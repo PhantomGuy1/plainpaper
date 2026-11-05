@@ -1,11 +1,12 @@
 import './style.css';
 import { ensureStore, loadStore } from './storage';
 import { renderAddPaper } from './add-paper';
-import { renderCard } from './card';
+import { renderDashboard } from './dashboard';
 
 // PlainPaper shell + simple view navigation. Feature views are added spec by
-// spec (see /.kiro/specs — no spec, no feature). Saving a paper returns to
-// this shell; the due-first-dashboard spec will add the list view later.
+// spec (see /.kiro/specs — no spec, no feature). The home view shows the
+// due-first dashboard (four open groups plus a Done list); saving a paper
+// returns to this shell.
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
@@ -47,23 +48,11 @@ function renderHome(): void {
 
   main.append(h1, tagline, privacy, addBtn);
 
-  // Saved papers render as plain-English cards.
+  // Saved papers render as the due-first dashboard: four open groups plus a
+  // Done list. Grouping and sorting live in src/dashboard.ts.
   const store = loadStore();
   if (store.papers.length > 0) {
-    const heading = document.createElement('h2');
-    heading.textContent = 'Your papers';
-
-    const list = document.createElement('section');
-    list.className = 'card-list';
-    // Stable display order: entry order (createdAt ascending) for now.
-    // The due-first-dashboard spec will add grouping later.
-    const sorted = [...store.papers].sort((a, b) => a.createdAt - b.createdAt);
-    for (const paper of sorted) {
-      // payday-buckets is not implemented yet, so the slot shows
-      // "Payday not set." and never invents a paycheck.
-      list.appendChild(renderCard(paper));
-    }
-    main.append(heading, list);
+    main.appendChild(renderDashboard(render));
   }
 
   app.appendChild(main);

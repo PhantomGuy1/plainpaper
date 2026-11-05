@@ -15,6 +15,8 @@ export interface Paper {
   dueDate?: string; // ISO YYYY-MM-DD from a date input (optional)
   ref?: string; // phone number or reference (optional)
   createdAt: number; // ms timestamp; entry order for deterministic sort
+  done?: boolean; // true when in the Done list (owned by due-first-dashboard)
+  doneAt?: number; // ms timestamp when marked done (owned by due-first-dashboard)
 }
 
 export interface PlainPaperStore {
@@ -85,6 +87,22 @@ export function addPaper(input: NewPaper): Paper {
   store.papers.push(paper);
   saveStore(store);
   return paper;
+}
+
+/** Mark a paper Done, or move it back to the open groups. Persists the change.
+ *  Owned by the due-first-dashboard spec (see .kiro/specs/due-first-dashboard/design.md). */
+export function setPaperDone(id: string, done: boolean): void {
+  const store = loadStore();
+  const paper = store.papers.find((p) => p.id === id);
+  if (!paper) return;
+  if (done) {
+    paper.done = true;
+    paper.doneAt = Date.now();
+  } else {
+    paper.done = false;
+    delete paper.doneAt;
+  }
+  saveStore(store);
 }
 
 /** Generate a UUID. Uses crypto.randomUUID when available, with a v4 fallback. */

@@ -176,3 +176,50 @@ select {
   line-height: 1.4;
   color: var(--ink);
 }
+
+/* Due-First Dashboard */
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.group h2 {
+  font-size: 1.4rem;
+  margin: 0 0 0.6rem;
+}
+
+.card-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.card-item:last-child {
+  margin-bottom: 0;
+}
+
+.done-btn {
+  align-self: flex-start;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.move-back-btn {
+  align-self: flex-start;
+}
+
+.empty-state {
+  margin: 0;
+  color: var(--ink);
+}
+
+/* The Done list sits below the open groups with a clear divider. */
+.done-group {
+  border-top: 2px solid var(--line);
+  padding-top: 1rem;
+}
