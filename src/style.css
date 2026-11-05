@@ -78,3 +78,47 @@ select {
   background: var(--paper);
   color: var(--ink);
 }
+
+/* Add a Paper form */
+
+.type-chooser {
+  border: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+}
+
+.type-chooser legend {
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 0.4rem;
+}
+
+.type-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.type-row button {
+  flex: 1 1 8rem;
+}
+
+.type-row button.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.type-fields {
+  margin-top: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.actions button {
+  flex: 1;
+}
