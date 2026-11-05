@@ -6,8 +6,9 @@
 // then entry order. No scoring, weighting, or prioritisation beyond that.
 // One tap marks a paper Done; Done items move back. Everything stays on device.
 
-import { loadStore, setPaperDone, type Paper } from './storage';
+import { loadStore, setPaperDone, type Paper, type PaydayPattern } from './storage';
 import { renderCard } from './card';
+import { paydayCardInfo } from './payday';
 
 /** The current local calendar date as ISO YYYY-MM-DD (date-only, ignoring time).
  *  Used as "today" for grouping and date comparisons. */
@@ -97,11 +98,18 @@ const GROUPS: { key: GroupKey; heading: string; empty: string }[] = [
 ];
 
 /** Render one open paper as a card per the plain-english-card spec, with a
- *  Done control that marks it done and triggers a re-render. */
-function renderOpenCard(paper: Paper, rerender: () => void): HTMLElement {
+ *  Done control that marks it done and triggers a re-render. The paycheck label
+ *  and pre-payday flag (from payday-buckets) fill the card's paycheck slot. */
+function renderOpenCard(
+  paper: Paper,
+  pattern: PaydayPattern | undefined,
+  today: string,
+  rerender: () => void,
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'card-item';
-  wrap.appendChild(renderCard(paper));
+  const info = paydayCardInfo(paper, pattern, today);
+  wrap.appendChild(renderCard(paper, info.label, info.flag));
 
   const doneBtn = document.createElement('button');
   doneBtn.type = 'button';
@@ -116,10 +124,16 @@ function renderOpenCard(paper: Paper, rerender: () => void): HTMLElement {
 }
 
 /** Render one Done paper as a card with a Move back control. */
-function renderDoneCard(paper: Paper, rerender: () => void): HTMLElement {
+function renderDoneCard(
+  paper: Paper,
+  pattern: PaydayPattern | undefined,
+  today: string,
+  rerender: () => void,
+): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'card-item';
-  wrap.appendChild(renderCard(paper));
+  const info = paydayCardInfo(paper, pattern, today);
+  wrap.appendChild(renderCard(paper, info.label, info.flag));
 
   const backBtn = document.createElement('button');
   backBtn.type = 'button';
@@ -138,6 +152,7 @@ function renderDoneCard(paper: Paper, rerender: () => void): HTMLElement {
 export function renderDashboard(rerender: () => void): HTMLElement {
   const store = loadStore();
   const today = todayISO();
+  const pattern = store.paydayPattern;
   const groups = groupPapers(store.papers, today);
 
   // Each group is sorted deterministically; date groups by due then entry
@@ -167,7 +182,7 @@ export function renderDashboard(rerender: () => void): HTMLElement {
       wrap.appendChild(empty);
     } else {
       for (const paper of list) {
-        wrap.appendChild(renderOpenCard(paper, rerender));
+        wrap.appendChild(renderOpenCard(paper, pattern, today, rerender));
       }
     }
     section.appendChild(wrap);
@@ -190,7 +205,7 @@ export function renderDashboard(rerender: () => void): HTMLElement {
     doneWrap.appendChild(empty);
   } else {
     for (const paper of donePapers) {
-      doneWrap.appendChild(renderDoneCard(paper, rerender));
+      doneWrap.appendChild(renderDoneCard(paper, pattern, today, rerender));
     }
   }
   section.appendChild(doneWrap);

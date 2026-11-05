@@ -15,8 +15,12 @@ const MONTHS = [
 ];
 
 /** Format an ISO YYYY-MM-DD as short month + day, e.g. "Nov 21".
- *  Appends the year when it differs from the current year, e.g. "Nov 21, 2027". */
-export function formatDate(isoDate: string): string {
+ *  Appends the year when it differs from the current year, e.g. "Nov 21, 2027".
+ *
+ *  `referenceYear` lets callers (payday-buckets) pass the year to compare
+ *  against so they stay pure; it defaults to the actual current year so the
+ *  card's existing behaviour is unchanged. */
+export function formatDate(isoDate: string, referenceYear?: number): string {
   // Parse the components manually so a UTC midnight parse never shifts the
   // calendar date in a negative timezone.
   const parts = isoDate.split('-');
@@ -24,7 +28,8 @@ export function formatDate(isoDate: string): string {
   const m = Number(parts[1]);
   const d = Number(parts[2]);
   const month = MONTHS[m - 1];
-  if (y !== new Date().getFullYear()) {
+  const currentYear = referenceYear ?? new Date().getFullYear();
+  if (y !== currentYear) {
     return `${month} ${d}, ${y}`;
   }
   return `${month} ${d}`;
@@ -140,10 +145,13 @@ export function glossaryMatches(
 
 /** Render a single Paper as a card.
  *  @param paycheckLabel optional label string from payday-buckets; when absent
- *         the slot shows "Payday not set." and never invents a paycheck. */
+ *         the slot shows "Payday not set." and never invents a paycheck.
+ *  @param paydayFlag optional pre-payday flag string from payday-buckets
+ *         ("Due before your next payday."), shown alongside the label. */
 export function renderCard(
   paper: Paper,
   paycheckLabel?: string | null,
+  paydayFlag?: string | null,
 ): HTMLElement {
   const card = document.createElement('article');
   card.className = 'card';
@@ -160,7 +168,9 @@ export function renderCard(
   actionEl.textContent = actionFor(paper.type);
   card.appendChild(actionEl);
 
-  // Paycheck label slot — provided label, or "Payday not set."
+  // Paycheck label slot — the label from payday-buckets, or "Payday not set."
+  // Never invents a paycheck: when no pattern is set the label is null and the
+  // slot says so.
   const paydayEl = document.createElement('p');
   paydayEl.className = 'card-payday';
   paydayEl.textContent =
@@ -168,6 +178,15 @@ export function renderCard(
       ? paycheckLabel
       : 'Payday not set.';
   card.appendChild(paydayEl);
+
+  // Pre-payday flag — shown alongside the label when the due date falls before
+  // the user's next payday. Omitted when it does not apply.
+  if (paydayFlag !== undefined && paydayFlag !== null && paydayFlag !== '') {
+    const flagEl = document.createElement('p');
+    flagEl.className = 'card-payday-flag';
+    flagEl.textContent = paydayFlag;
+    card.appendChild(flagEl);
+  }
 
   // Secondary details — only when entered; omitted when absent (not "not entered").
   if (paper.sender !== undefined && paper.sender !== '') {

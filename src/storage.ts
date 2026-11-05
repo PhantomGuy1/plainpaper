@@ -19,9 +19,15 @@ export interface Paper {
   doneAt?: number; // ms timestamp when marked done (owned by due-first-dashboard)
 }
 
+export interface PaydayPattern {
+  day1: number; // 1–31, set by the user (owned by payday-buckets)
+  day2: number; // 1–31, set by the user (owned by payday-buckets)
+}
+
 export interface PlainPaperStore {
   version: 1;
   papers: Paper[];
+  paydayPattern?: PaydayPattern; // owned by payday-buckets
 }
 
 /** A paper before it has been assigned an id and createdAt. */
@@ -102,6 +108,15 @@ export function setPaperDone(id: string, done: boolean): void {
     paper.done = false;
     delete paper.doneAt;
   }
+  saveStore(store);
+}
+
+/** Save the payday pattern (two days of the month) to the store. Owned by the
+ *  payday-buckets spec (see .kiro/specs/payday-buckets/design.md). Stored only
+ *  on this device; nothing is uploaded. */
+export function savePaydayPattern(pattern: PaydayPattern): void {
+  const store = loadStore();
+  store.paydayPattern = pattern;
   saveStore(store);
 }
 
