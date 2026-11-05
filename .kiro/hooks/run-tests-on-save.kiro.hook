@@ -1,0 +1,1 @@
+{"description":"Runs the build check whenever source files under src/ are edited, so a broken save never passes silently.","enabled":true,"name":"run-tests-on-save","then":{"command":"npm run build","type":"runCommand"},"version":"1","when":{"patterns":["src/**"],"type":"fileEdited"}}
