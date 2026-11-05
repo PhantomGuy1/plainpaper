@@ -1,0 +1,80 @@
+/* PlainPaper — the one and only stylesheet. Hand-written.
+   System fonts only, large type, high contrast (see .kiro/steering/tech.md). */
+
+:root {
+  --ink: #111111;
+  --paper: #ffffff;
+  --accent: #1a56db;
+  --line: #444444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+h1 {
+  font-size: 2.2rem;
+  line-height: 1.2;
+  margin: 0.5rem 0;
+}
+
+.tagline {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+button {
+  font: inherit;
+  min-height: 3rem;
+  padding: 0.6rem 1.2rem;
+  border: 2px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin: 1rem 0 0.3rem;
+}
+
+input,
+select {
+  font: inherit;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--paper);
+  color: var(--ink);
+}
