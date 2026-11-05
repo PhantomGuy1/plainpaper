@@ -3,6 +3,7 @@ import { ensureStore, loadStore } from './storage';
 import { renderAddPaper } from './add-paper';
 import { renderDashboard } from './dashboard';
 import { renderPaydaySettings } from './payday-settings';
+import { renderMorning } from './morning';
 
 // PlainPaper shell + simple view navigation. Feature views are added spec by
 // spec (see /.kiro/specs — no spec, no feature). The home view shows the
@@ -11,7 +12,7 @@ import { renderPaydaySettings } from './payday-settings';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 
-type View = 'home' | 'add-paper' | 'payday-settings';
+type View = 'home' | 'add-paper' | 'payday-settings' | 'morning';
 let currentView: View = 'home';
 
 function goHome(): void {
@@ -26,6 +27,11 @@ function goToAddPaper(): void {
 
 function goToPaydaySettings(): void {
   currentView = 'payday-settings';
+  render();
+}
+
+function goToMorning(): void {
+  currentView = 'morning';
   render();
 }
 
@@ -57,9 +63,14 @@ function renderHome(): void {
   paydayBtn.textContent = 'Set payday days';
   paydayBtn.addEventListener('click', goToPaydaySettings);
 
+  const todayBtn = document.createElement('button');
+  todayBtn.type = 'button';
+  todayBtn.textContent = "Today's 3";
+  todayBtn.addEventListener('click', goToMorning);
+
   const homeActions = document.createElement('div');
   homeActions.className = 'home-actions';
-  homeActions.append(addBtn, paydayBtn);
+  homeActions.append(todayBtn, addBtn, paydayBtn);
 
   main.append(h1, tagline, privacy, homeActions);
 
@@ -80,6 +91,8 @@ function render(): void {
     renderHome();
   } else if (currentView === 'add-paper') {
     app.appendChild(renderAddPaper({ onSaved: goHome, onCancel: goHome }));
+  } else if (currentView === 'morning') {
+    app.appendChild(renderMorning({ onBack: goHome }));
   } else {
     app.appendChild(renderPaydaySettings({ onSaved: goHome, onCancel: goHome }));
   }

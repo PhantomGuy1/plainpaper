@@ -89,6 +89,19 @@ function sortByCreated(a: Paper, b: Paper): number {
   return a.createdAt - b.createdAt;
 }
 
+/** Deterministic sort across all open papers as a single list: dated items
+ *  first (due date ascending, then entry order), no-date items last (entry
+ *  order only). This is the dashboard's deterministic sort applied to one
+ *  combined list, reused by the morning view's Today's 3 so the order matches
+ *  the dashboard. */
+export function openPaperComparator(a: Paper, b: Paper): number {
+  const aDated = hasDueDate(a);
+  const bDated = hasDueDate(b);
+  if (aDated !== bDated) return aDated ? -1 : 1; // dated items come first
+  if (aDated) return sortByDueThenCreated(a, b);
+  return sortByCreated(a, b);
+}
+
 /** Display metadata for each open group, in order. */
 const GROUPS: { key: GroupKey; heading: string; empty: string }[] = [
   { key: 'overdue', heading: 'Overdue', empty: 'Nothing overdue.' },
