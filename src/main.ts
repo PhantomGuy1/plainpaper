@@ -4,6 +4,7 @@ import { renderAddPaper } from './add-paper';
 import { renderDashboard } from './dashboard';
 import { renderPaydaySettings } from './payday-settings';
 import { renderMorning } from './morning';
+import { renderBackupControls } from './backup';
 
 // PlainPaper shell + simple view navigation. Feature views are added spec by
 // spec (see /.kiro/specs — no spec, no feature). The home view shows the
@@ -49,8 +50,10 @@ function renderHome(): void {
   tagline.className = 'tagline';
   tagline.textContent = 'Your bills and letters, in plain English.';
 
+  // Privacy line — shown exactly, always, on the home screen.
   const privacy = document.createElement('p');
-  privacy.textContent = 'Nothing you type here leaves this device.';
+  privacy.className = 'privacy-line';
+  privacy.textContent = 'Your papers stay on this device. Nothing is uploaded.';
 
   const addBtn = document.createElement('button');
   addBtn.className = 'primary';
@@ -75,13 +78,47 @@ function renderHome(): void {
   main.append(h1, tagline, privacy, homeActions);
 
   // Saved papers render as the due-first dashboard: four open groups plus a
-  // Done list. Grouping and sorting live in src/dashboard.ts.
+  // Done list (see src/dashboard.ts). With no papers, show the first-run
+  // welcome instead of the per-group empty states.
   const store = loadStore();
   if (store.papers.length > 0) {
     main.appendChild(renderDashboard(render));
+  } else {
+    main.appendChild(renderFirstRun());
   }
 
+  // Local backup — export and import, all on the device.
+  main.appendChild(renderBackupControls({ onImported: render }));
+
   app.appendChild(main);
+}
+
+/** The first-run welcome, shown on the home screen when there are no papers.
+ *  Explains the app in plain words and gives a clear way to add the first
+ *  paper. The privacy line is shown above it (always on the home screen). */
+function renderFirstRun(): HTMLElement {
+  const section = document.createElement('section');
+  section.className = 'first-run';
+
+  const heading = document.createElement('h2');
+  heading.textContent = 'Welcome to PlainPaper';
+  section.appendChild(heading);
+
+  const para = document.createElement('p');
+  para.textContent =
+    'PlainPaper turns your bills, letters, and school notes into plain-English cards. ' +
+    'Each card shows what it is, how much, and when it is due. ' +
+    'Set your payday days once, and each card also shows which paycheck it comes from.';
+  section.appendChild(para);
+
+  const cta = document.createElement('button');
+  cta.type = 'button';
+  cta.className = 'primary';
+  cta.textContent = 'Add your first paper';
+  cta.addEventListener('click', goToAddPaper);
+  section.appendChild(cta);
+
+  return section;
 }
 
 function render(): void {

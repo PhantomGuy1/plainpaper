@@ -41,21 +41,65 @@ export type NewPaper = {
 };
 
 const STORAGE_KEY = 'plainpaper:data';
-const CURRENT_VERSION = 1;
+export const CURRENT_VERSION = 1;
 
-/** Read the store. Returns a fresh empty store if none exists or it is malformed. */
+/** Does a parsed value look like a PlainPaper store? It must be an object with
+ *  a numeric `version` and an array `papers`. The optional `paydayPattern` is
+ *  not checked here — its absence is valid (older backups lack it). Shared by
+ *  loadStore and the import path so both apply the same check. */
+export function isValidStore(value: unknown): boolean {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as PlainPaperStore).version === 'number' &&
+    Array.isArray((value as PlainPaperStore).papers)
+  );
+}
+
+/** A mutable view of the store used while migrating, where `version` is a
+ *  plain number (not the literal `1`) so migration steps can bump it. */
+type MutableStore = {
+  version: number;
+  papers: Paper[];
+  paydayPattern?: PaydayPattern;
+};
+
+/** Ordered per-version migration steps. Step `i` upgrades the store from
+ *  version `i+1` to `i+2` (MIGRATIONS[0] is the v1->v2 step). There are no
+ *  steps yet — the current target is 1 — so this array is empty. Future shape
+ *  changes add a step here and bump CURRENT_VERSION. */
+const MIGRATIONS: Array<(store: MutableStore) => void> = [];
+
+/** Walk a store from its `version` up to `target`, applying ordered per-step
+ *  migrations. This is the single place future shape changes go, so old
+ *  backups never break. There are no steps yet (target 1), so this is a
+ *  pass-through. The store is shallow-copied first so the caller's object is
+ *  never mutated. Storage reads run incoming stores through here so on-disk
+ *  data is always current.
+ *
+ *  (see .kiro/specs/local-storage-and-backup/design.md) */
+export function migrate(store: PlainPaperStore, target: number): PlainPaperStore {
+  // Shallow-copy all own fields so migrations never mutate the caller's
+  // object, and copy the papers array so per-paper steps can replace entries.
+  const current: MutableStore = { ...store, papers: [...store.papers] };
+  while (current.version < target) {
+    const step = MIGRATIONS[current.version - 1];
+    if (step) step(current);
+    current.version = current.version + 1;
+  }
+  return current as PlainPaperStore;
+}
+
+/** Read the store. Returns a fresh empty store if none exists or it is
+ *  malformed. Incoming stores run through `migrate` so stored data is always
+ *  current. */
 export function loadStore(): PlainPaperStore {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as unknown;
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        typeof (parsed as PlainPaperStore).version === 'number' &&
-        Array.isArray((parsed as PlainPaperStore).papers)
-      ) {
-        return parsed as PlainPaperStore;
+      if (isValidStore(parsed)) {
+        return migrate(parsed as PlainPaperStore, CURRENT_VERSION);
       }
     } catch {
       // A broken payload is ignored; we fall back to a fresh store.
